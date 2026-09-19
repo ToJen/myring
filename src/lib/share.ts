@@ -24,7 +24,7 @@ export function challengeText(result: Result): string {
 export async function share(text: string, url: string): Promise<'shared' | 'copied' | 'failed'> {
   if (typeof navigator !== 'undefined' && navigator.share) {
     try {
-      await navigator.share({ title: 'myring', text, url })
+      await navigator.share({ title: 'MyRing', text, url })
       return 'shared'
     } catch (err) {
       if ((err as Error).name === 'AbortError') return 'failed'

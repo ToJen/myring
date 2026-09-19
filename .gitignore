@@ -7,6 +7,10 @@ node_modules/
 # Build output
 dist/
 dist-ssr/
+# Generated social cards and share pages (npm run og)
+public/og/
+public/s/
+public/c/
 
 # Environment / secrets
 .env

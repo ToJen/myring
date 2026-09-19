@@ -1,4 +1,4 @@
-# myring
+# MyRing
 
 Which ring would choose you? A three-trial personality game built around the seven emotional forces of the spectrum. Mobile-first, fast, and a little dramatic. Runs entirely in the browser, with no backend and no AI calls.
 
@@ -35,6 +35,15 @@ npm install
 npm run dev     # http://localhost:5173/myring/
 ```
 
+## Sharing and social previews
+
+Every result and challenge link has its own preview card. Link crawlers ignore URL fragments and do not run JavaScript, so hash routes alone would all preview identically. Instead, `scripts/og.ts` generates at build time:
+
+- `public/og/default.png` plus one 1200x630 card per primary/secondary pair for results (`og/r-<primary>-<secondary>.png`) and challenges (`og/c-<primary>-<secondary>.png`).
+- A tiny static page per pair at `public/s/<primary>/<secondary>/` (result) and `public/c/<primary>/<secondary>/` (challenge) carrying Open Graph and Twitter tags, which immediately forwards to the matching hash route.
+
+Share links point at these static pages. `npm run og` regenerates everything and runs automatically as part of `npm run build`. The generated folders are gitignored. Cards render with `@resvg/resvg-js` using the Space Grotesk fonts committed in `scripts/fonts/`.
+
 ## Deploying
 
 Pushes to `main` build and deploy to GitHub Pages through `.github/workflows/deploy.yml`. No secrets or repository variables are required.
@@ -44,6 +53,7 @@ Pushes to `main` build and deploy to GitHub Pages through `.github/workflows/dep
 | Command | What it does |
 | --- | --- |
 | `npm run dev` | Dev server |
-| `npm run build` | Typecheck and build to `dist/` |
+| `npm run og` | Regenerate social cards and share pages into `public/` |
+| `npm run build` | Generate cards, typecheck, and build to `dist/` |
 | `npm run preview` | Serve the production build locally |
 | `npm run lint` | oxlint |

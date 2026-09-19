@@ -61,7 +61,7 @@ export default function Result({ result, shared = false, onRestart }: Props) {
               <Ring ring={result.primary} size={44} state="breathe" className="card__ring" />
               <Ring ring={result.secondary} size={28} className="card__ring card__ring--secondary" />
             </div>
-            <span className="small">myring</span>
+            <span className="small">MyRing</span>
           </div>
           <div>
             <h1 className="card__combo">

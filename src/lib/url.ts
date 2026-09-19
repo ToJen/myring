@@ -23,8 +23,10 @@ export function encodeResult(result: Result, opts: { challenge?: boolean; name?:
   })
   if (result.archetype) params.set('a', result.archetype)
   if (opts.name) params.set('n', opts.name.slice(0, 32))
-  const route = opts.challenge ? 'challenge' : 'result'
-  return `${window.location.origin}${BASE}/#/${route}?${params.toString()}`
+  // Real paths (not hash routes) so link previews get a per-archetype card.
+  // Each static page under /s or /c forwards to the matching hash route. See scripts/og.ts.
+  const dir = opts.challenge ? 'c' : 's'
+  return `${window.location.origin}${BASE}/${dir}/${result.primary}/${result.secondary}/?${params.toString()}`
 }
 
 export function parseHash(hash: string): { route: string; params: URLSearchParams } {

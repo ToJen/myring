@@ -152,13 +152,17 @@ textarea {
 }
 
 .logo__i::before {
+  /* Sits exactly on the dot of Space Grotesk 700 "i": dot centre is 0.133em from the
+     glyph origin and 0.195em below the line-box top (line-height 1), diameter 0.176em.
+     Measured in-browser; letter-spacing does not move the glyph origin. */
   content: '';
   position: absolute;
-  left: 50%;
-  top: 0.06em;
-  width: 0.18em;
-  height: 0.18em;
-  transform: translateX(-50%);
+  left: 0.133em;
+  top: 0.195em;
+  width: 0.19em;
+  height: 0.19em;
+  box-sizing: border-box;
+  transform: translate(-50%, -50%);
   border-radius: 9999px;
   border: 0.045em solid var(--accent, var(--green));
   box-shadow:
@@ -170,8 +174,12 @@ textarea {
 }
 
 .logo__i-glyph {
+  /* Hide the font's own dot (ends at 0.283em) but keep the stem (starts at 0.315em).
+     inline-block + line-height 1 makes the gradient box match the 1em line box. */
+  display: inline-block;
+  line-height: 1;
   color: transparent;
-  background: linear-gradient(to bottom, transparent 0, transparent 0.24em, var(--text) 0.24em);
+  background: linear-gradient(to bottom, transparent 0, transparent 0.3em, var(--text) 0.3em);
   -webkit-background-clip: text;
   background-clip: text;
 }

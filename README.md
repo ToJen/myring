@@ -6,6 +6,12 @@ Live: https://tojen.github.io/myring/
 
 Unofficial fan-made experience. Not affiliated with or endorsed by DC or Warner Bros.
 
+## Screenshots
+
+| Homepage | Result | Challenge from a friend |
+| --- | --- | --- |
+| ![Homepage: the MyRing logo above a glowing ring and the Find My Ring button](docs/home.png) | ![Result: Green x Orange, The Empire Builder, with spectrum fingerprint and share buttons](docs/result.png) | ![Challenge: someone was chosen by Orange x Violet, will your ring match?](docs/challenge.png) |
+
 ## How it works
 
 1. **Detection.** Seven rings appear.

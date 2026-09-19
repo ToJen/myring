@@ -3,21 +3,15 @@
 
 # Dependencies
 node_modules/
-worker/node_modules/
 
 # Build output
 dist/
 dist-ssr/
-worker/dist/
 
 # Environment / secrets
 .env
 .env.*
 !.env.example
-worker/.dev.vars
-worker/.dev.vars.*
-.wrangler/
-worker/.wrangler/
 
 # Logs
 logs

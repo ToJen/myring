@@ -4,8 +4,6 @@ import Ring from './Ring'
 import { RING_COLOR } from '../lib/rings'
 import type { Ring as RingId, Trial as TrialT } from '../lib/types'
 
-export const MAX_ANSWER = 600
-
 const NUMERALS = ['I', 'II', 'III']
 
 const LOADING_COPY: Record<1 | 2 | 3, string[]> = {
@@ -18,21 +16,19 @@ interface Props {
   stage: 1 | 2 | 3
   trial: TrialT
   remaining: RingId[]
-  status: 'idle' | 'loading' | 'error'
-  initialAnswer: string
-  onSubmit: (answer: string) => void
+  status: 'idle' | 'loading'
+  onSubmit: (choice: number) => void
 }
 
-export default function Trial({ stage, trial, remaining, status, initialAnswer, onSubmit }: Props) {
-  const [answer, setAnswer] = useState(initialAnswer)
+export default function Trial({ stage, trial, remaining, status, onSubmit }: Props) {
+  const [choice, setChoice] = useState<number | null>(null)
   const [loadIdx, setLoadIdx] = useState(0)
-  const trimmed = answer.trim()
   const theme = trial.title.split('·')[1]?.trim() ?? ''
 
   const copy = LOADING_COPY[stage]
   useEffect(() => {
     if (status !== 'loading') return
-    const t = setInterval(() => setLoadIdx((i) => Math.min(i + 1, copy.length - 1)), 1800)
+    const t = setInterval(() => setLoadIdx((i) => Math.min(i + 1, copy.length - 1)), 1500)
     return () => clearInterval(t)
   }, [status, copy.length])
 
@@ -76,34 +72,27 @@ export default function Trial({ stage, trial, remaining, status, initialAnswer, 
         <p className="trial__scenario">{trial.scenario}</p>
         <h2 className="trial__question">{trial.question}</h2>
 
-        {status === 'error' && (
-          <div className="error">
-            <span className="kicker" style={{ color: 'var(--red)' }}>
-              The signal was interrupted.
-            </span>
-            <p className="body body--secondary" style={{ margin: 0 }}>
-              The ring couldn't read your response.
-            </p>
-          </div>
-        )}
-
-        <textarea
-          className="trial__textarea"
-          placeholder="What would you actually do?"
-          maxLength={MAX_ANSWER}
-          value={answer}
-          onChange={(e) => setAnswer(e.target.value)}
-          aria-label="Your answer"
-        />
+        <div className="options" role="radiogroup" aria-label="Your answer">
+          {trial.options.map((o, i) => (
+            <button
+              key={i}
+              type="button"
+              role="radio"
+              aria-checked={choice === i}
+              className={`option${choice === i ? ' option--selected' : ''}`}
+              onClick={() => setChoice(i)}
+            >
+              <span className="option__index">{String.fromCharCode(65 + i)}</span>
+              <span className="option__text">{o.text}</span>
+            </button>
+          ))}
+        </div>
         <div className="trial__meta">
           <span>Answer honestly. Nothing is stored.</span>
-          <span>
-            {answer.length}/{MAX_ANSWER}
-          </span>
         </div>
         <div className="trial__actions">
-          <button className="btn btn--primary" disabled={!trimmed} onClick={() => onSubmit(trimmed)}>
-            {status === 'error' ? '[ Try again ]' : stage === 3 ? 'Submit final answer' : 'Submit'}
+          <button className="btn btn--primary" disabled={choice === null} onClick={() => choice !== null && onSubmit(choice)}>
+            {stage === 3 ? 'Submit final answer' : 'Submit'}
           </button>
         </div>
         {stage === 3 && (

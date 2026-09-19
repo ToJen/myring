@@ -8,10 +8,8 @@ import Landing from './components/Landing'
 import Result from './components/Result'
 import Reveal from './components/Reveal'
 import Trial from './components/Trial'
-import { submitFinal, submitTrial } from './lib/api'
-import { classify } from './lib/classify'
+import { eliminate, finalResult, nextTrial, openingTrial, tally } from './lib/engine'
 import { RINGS, ZERO_SCORES } from './lib/rings'
-import { pickOpener } from './lib/trials'
 import type { GameState, Ring, Trial as TrialT } from './lib/types'
 import { decodeShared, parseHash, sharedToResult } from './lib/url'
 
@@ -19,8 +17,7 @@ type Phase = 'landing' | 'detection' | 'trial' | 'eliminating' | 'revealing' | '
 
 interface UiState extends GameState {
   phase: Phase
-  status: 'idle' | 'loading' | 'error'
-  draft: string
+  status: 'idle' | 'loading'
   pendingEliminate: Ring[]
   finalists: Ring[]
 }
@@ -28,12 +25,11 @@ interface UiState extends GameState {
 type Action =
   | { type: 'start' }
   | { type: 'detected'; trial: TrialT }
-  | { type: 'submit'; answer: string }
+  | { type: 'submit'; choice: number }
   | { type: 'intermediate'; scores: Record<Ring, number>; eliminate: Ring[]; next: TrialT }
   | { type: 'eliminated' }
   | { type: 'final'; result: NonNullable<GameState['result']> }
   | { type: 'revealed' }
-  | { type: 'fail' }
   | { type: 'reset' }
 
 const initial: UiState = {
@@ -43,7 +39,6 @@ const initial: UiState = {
   trials: [],
   scores: ZERO_SCORES,
   status: 'idle',
-  draft: '',
   pendingEliminate: [],
   finalists: [],
 }
@@ -53,11 +48,11 @@ function reducer(s: UiState, a: Action): UiState {
     case 'start':
       return { ...initial, phase: 'detection' }
     case 'detected':
-      return { ...s, phase: 'trial', stage: 1, trials: [a.trial], status: 'idle', draft: '' }
+      return { ...s, phase: 'trial', stage: 1, trials: [a.trial], status: 'idle' }
     case 'submit': {
       const trials = s.trials.slice()
-      trials[trials.length - 1] = { ...trials[trials.length - 1], answer: a.answer }
-      return { ...s, trials, draft: a.answer, status: 'loading' }
+      trials[trials.length - 1] = { ...trials[trials.length - 1], choice: a.choice }
+      return { ...s, trials, status: 'loading' }
     }
     case 'intermediate':
       return {
@@ -75,7 +70,6 @@ function reducer(s: UiState, a: Action): UiState {
         pendingEliminate: [],
         stage: (s.stage + 1) as 2 | 3,
         phase: 'trial',
-        draft: '',
       }
     case 'final':
       return {
@@ -90,8 +84,6 @@ function reducer(s: UiState, a: Action): UiState {
       }
     case 'revealed':
       return { ...s, phase: 'result' }
-    case 'fail':
-      return { ...s, status: 'error' }
     case 'reset':
       return initial
   }
@@ -122,26 +114,27 @@ export default function App() {
     dispatch({ type: 'start' })
   }, [])
 
-  const onDetected = useCallback(() => dispatch({ type: 'detected', trial: pickOpener() }), [])
+  const onDetected = useCallback(() => dispatch({ type: 'detected', trial: openingTrial() }), [])
   const onEliminated = useCallback(() => dispatch({ type: 'eliminated' }), [])
   const onRevealed = useCallback(() => dispatch({ type: 'revealed' }), [])
 
-  async function onSubmit(answer: string) {
-    dispatch({ type: 'submit', answer })
+  function onSubmit(choice: number) {
+    dispatch({ type: 'submit', choice })
     const trials = s.trials.slice()
-    trials[trials.length - 1] = { ...trials[trials.length - 1], answer }
-    try {
-      if (s.stage === 1 || s.stage === 2) {
-        const r = await submitTrial(s.stage, s.remainingRings, trials)
-        dispatch({ type: 'intermediate', scores: r.scores, eliminate: r.eliminate, next: r.next_question })
-      } else if (s.stage === 3) {
-        const r = await submitFinal(s.remainingRings, trials)
-        dispatch({ type: 'final', result: { ...r, classification: classify(r.spectrum, r.primary, r.secondary) } })
+    trials[trials.length - 1] = { ...trials[trials.length - 1], choice }
+    const stage = s.stage
+    const remaining = s.remainingRings
+    // A short pause so the "analyzing" moment lands before the spectrum shifts.
+    const delay = stage === 3 ? 3400 : 2600
+    window.setTimeout(() => {
+      if (stage === 1 || stage === 2) {
+        const out = eliminate(trials, remaining)
+        const left = remaining.filter((r) => !out.includes(r))
+        dispatch({ type: 'intermediate', scores: tally(trials), eliminate: out, next: nextTrial(stage === 1 ? 2 : 3, left) })
+      } else if (stage === 3) {
+        dispatch({ type: 'final', result: finalResult(trials) })
       }
-    } catch (err) {
-      console.error(err)
-      dispatch({ type: 'fail' })
-    }
+    }, delay)
   }
 
   // Shared routes
@@ -189,7 +182,6 @@ export default function App() {
           trial={currentTrial}
           remaining={s.remainingRings}
           status={s.status}
-          initialAnswer={s.draft}
           onSubmit={onSubmit}
         />
       )

@@ -7,11 +7,19 @@ export type Classification =
   | 'pure_signal'
   | 'standard_resonance'
 
+export interface Option {
+  text: string
+  /** Weight per ring, in RINGS order: green, yellow, red, orange, blue, indigo, violet. */
+  weights: number[]
+}
+
 export interface Trial {
   title: string
   scenario: string
   question: string
-  answer?: string
+  options: Option[]
+  /** Index into `options` once the player has chosen. */
+  choice?: number
 }
 
 export interface Result {
@@ -38,11 +46,3 @@ export interface GameState {
   scores: Record<Ring, number>
   result?: Result
 }
-
-export interface IntermediateResponse {
-  scores: Record<Ring, number>
-  eliminate: Ring[]
-  next_question: { title: string; scenario: string; question: string }
-}
-
-export type FinalResponse = Omit<Result, 'classification'>
